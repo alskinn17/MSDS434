@@ -1,0 +1,45 @@
+#requirement6
+#connect to the db
+con = psycopg2.connect(
+            host = "localhost",
+            database = "chicago_business_intelligence",
+            user = "postgres",
+            password = "root",
+            port = 5433)
+
+cur = con.cursor()
+#zip code for MDW is 60638 and ORD is 60018
+cur.execute("select trip_start_timestamp, pickup_zip_code, dropoff_zip_code from taxi_trips")
+
+rows = cur.fetchall()
+
+df_air = pd.DataFrame(rows)
+df_air.columns = ['trip_start_timestamp', 'pickup_zip_code', 'dropoff_zip_code']
+
+#find all trips that went to or from either airport
+temp1 = df_air[(df_air.pickup_zip_code == '60638')]
+temp2 = df_air[(df_air.pickup_zip_code == '60018')]
+temp3 = df_air[(df_air.dropoff_zip_code == '60638')]
+temp4 = df_air[(df_air.dropoff_zip_code == '60018')]
+
+df_air_taxi = temp1.append(temp2)
+df_air_taxi = df_air_taxi.append(temp3)
+df_air_taxi = df_air_taxi.append(temp4)
+
+#get covid detail data
+cur.execute("select zip_code, week_number, cases_weekly from covid_data")
+
+rows = cur.fetchall()
+
+df_covid = pd.DataFrame(rows)
+df_covid.columns = ['zip_code', 'week_number', 'cases_weekly']
+
+print("The following dataset includes all taxi trips that either went to the airport or came from the airport")
+print(df_air_taxi)
+
+print("The following dataset includes the relevant COVID weekly case rate for each zip code")
+print(df_covid)
+
+
+#close connection
+con.close()

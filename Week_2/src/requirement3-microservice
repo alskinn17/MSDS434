@@ -1,0 +1,37 @@
+#requirement 3 
+#connect to the db
+con = psycopg2.connect(
+            host = "localhost",
+            database = "chicago_business_intelligence",
+            user = "postgres",
+            password = "root",
+            port = 5433)
+
+cur = con.cursor()
+#grab HIGH ccvi category data
+cur.execute("select community_zip, community_area_name, ccvi_category from ccvi_data")
+
+rows = cur.fetchall()
+
+df = pd.DataFrame(rows)
+df.columns = ['community_area_or_zip', 'community_area_name', 'ccvi_category']
+df['ccvi_category'] = df['ccvi_category'].astype(str).astype(float)
+
+#filter out areas that are not HIGH on CCVI scale 
+df = df[df['ccvi_category'] > 47.4]
+
+#grab taxi trip pickup and drop off data
+cur.execute("select pickup_zip_code, dropoff_zip_code from taxi_trips")
+
+rows_tt = cur.fetchall()
+
+df_tt = pd.DataFrame(rows_tt)
+df_tt.columns = ['pickup_zip_code', 'dropoff_zip_code']
+
+#create a flag that checks for trips that pick up or drop off in a area with a HIGH CCVI
+df_tt = df_tt.assign(flag_p=df_tt.pickup_zip_code.isin(df.community_area_or_zip).astype(int))
+df_tt = df_tt.assign(flag_d=df_tt.dropoff_zip_code.isin(df.community_area_or_zip).astype(int))
+
+
+#close connection
+con.close()
