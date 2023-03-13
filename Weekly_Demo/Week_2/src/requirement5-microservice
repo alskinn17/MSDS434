@@ -1,0 +1,49 @@
+#requirement 5
+
+#connect to the db
+con = psycopg2.connect(
+            host = "localhost",
+            database = "chicago_business_intelligence",
+            user = "postgres",
+            password = "root",
+            port = 5433)
+            
+cur = con.cursor()
+
+cur.execute("select community_area, community_area_name, unemployment, below_poverty_level from community_area_unemployment")
+
+rows = cur.fetchall()
+
+df_unemployment = pd.DataFrame(rows)
+df_unemployment.columns = ['community_area', 'community_area_name', 'unemployment_rate', 'poverty_rate']
+
+#select top 5 unemployment rate areas and top 5 poverty rate areas
+df_top5_unemployment = df_unemployment.sort_values(by='unemployment_rate', ascending=False)
+df_top5_unemployment = df_top5_unemployment.head()
+df_top5_poverty = df_unemployment.sort_values(by='poverty_rate', ascending=False)
+df_top5_poverty = df_top5_poverty.head()
+
+#pull relevant data from building permits
+cur.execute("select permit_id, community_area, subtotal_unpaid, total_fee, contact_1_type, contact_1_name, contact_1_city, contact_1_state, contact_1_zipcode  from building_permits")
+
+rows = cur.fetchall()
+
+df_bp = pd.DataFrame(rows)
+df_bp.columns = ['permit_id', 'community_area', 'subtotal_unpaid', 'total_fee', 'contact_1_type', 'contact_1_name', 'contact_1_city', 'contact_1_state', 'contact_1_zipcode']
+
+#check for open building permits in areas with high poverty rates or high unemployment and flag them
+df_bp = df_bp.assign(flag_u=df_bp.community_area.isin(df_top5_unemployment).astype(int))
+df_bp = df_bp.assign(flag_p=df_bp.community_area.isin(df_top5_poverty).astype(int))
+
+#create temp dfs to hold flagged data
+temp1 = df_bp[(df_bp.flag_u == 1)]
+temp2 = df_bp[(df_bp.flag_p == 1)]
+
+#display which open building permits should have fees waived
+df_waive_fee = temp1.append(temp2)
+print("Here is a list of every open building permit in an area with top 5 poverty or top 5 unemployment:")
+df_waive_fee
+
+
+#close connection
+con.close()

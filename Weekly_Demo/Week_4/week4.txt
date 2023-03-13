@@ -1,0 +1,22 @@
+#these are the commands run durnig the demonstration
+
+
+gcloud projects list
+gcloud config set project project skinner-demo4
+git clone https://github.com/GoogleCloudPlatform/data-science-on-gcp
+cd data-science-on-gcp/02_ingest/
+mkdir data
+cp download.sh  data
+cd data
+for MONTH in `seq 1 12`; do bash download.sh 2015 $MONTH; done
+cd 201501.csv 201501.bck
+Rm *.csv
+python demo.py
+f = open("201501.bck").readlines()
+fout = open("201501.csv","w")
+for i in range(5000):
+    fout.write(f[i])
+Cat csv
+gsutil -m cp *.csv gs://skinner_demo4
+bq mk skinnersongcpal
+bq load --autodetect --source_format=CSV skinnersongcpal/fight_autoo gs://skinner_demo4/201501.csv

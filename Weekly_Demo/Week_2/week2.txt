@@ -1,0 +1,19 @@
+#commands ran during demonstration
+
+Sudo apt update
+Sudo apt install git
+
+Git clone https://github.com/alskinn17/msds432-final-project.git
+
+Git checkout msds434
+
+Git config --global user.email
+Git config --global user.name
+
+Make a change
+
+Git add file name
+
+Git commit -m "week 2 demo"
+
+Git push

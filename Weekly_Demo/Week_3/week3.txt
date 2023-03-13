@@ -1,0 +1,5 @@
+#these are the commands run during the demonstration video
+
+Cd appengine/standard_python3/hello_world
+Cat main.py
+Gcloud app deploy app.yaml
